@@ -47,16 +47,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    let qr = QRCode::new(&args.input, ecc, args.qr_version)?;
+    let qr = QRCode::new(&args.input, Some(ecc), args.qr_version)?;
 
     if args.png {
         let img = qr.to_png(args.size, args.quiet_zone);
         img.save(&args.output)?;
     } else {
         let svg = qr.to_svg(args.quiet_zone);
-        std::fs::write(&args.output, svg)?;
+        std::fs::write(&args.output.with_extension("svg"), svg)?;
     }
 
-    println!("wrote {}", args.output.display());
+    println!("wrote {}", args.output.with_extension("svg").display());
     Ok(())
 }

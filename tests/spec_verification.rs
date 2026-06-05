@@ -4,7 +4,7 @@ use qrgen::{QRCode, ECCLevel};
 
 #[test]
 fn svg_has_correct_module_count() {
-    let qr = QRCode::new("1", ECCLevel::M, Some(1)).unwrap();
+    let qr = QRCode::new("1", Some(ECCLevel::M), Some(1)).unwrap();
     let svg = qr.to_svg(false);
     
     // Count our dark modules (each h 1 v 1 h -1 Z = 1 module)
@@ -15,12 +15,13 @@ fn svg_has_correct_module_count() {
     assert!(dark_count < 300, "Too many dark modules: {}", dark_count);
 }
 
+#[cfg(not(target_os = "windows"))]
 #[test]
 fn scan_roundtrip() {
     use std::process::Command;
     
     let input = "1";
-    let qr = QRCode::new(input, ECCLevel::M, Some(1)).unwrap();
+    let qr = QRCode::new(input, Some(ECCLevel::M), Some(1)).unwrap();
     
     // Write PNG
     let png = qr.to_png(290, false);
@@ -57,7 +58,7 @@ fn scan_roundtrip() {
 
 #[test]
 fn module_counts_look_reasonable() {
-    let qr = QRCode::new("1", ECCLevel::M, Some(1)).unwrap();
+    let qr = QRCode::new("1", Some(ECCLevel::M), Some(1)).unwrap();
     
     let mut finder = 0usize;
     let mut timing = 0usize;

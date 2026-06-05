@@ -95,7 +95,8 @@ impl QRCode {
     /// `version` selects a specific QR version (1-40). When `None`, the
     /// smallest version that holds the input at the requested ECC level is
     /// chosen automatically.
-    pub fn new(input: &str, ecc: ECCLevel, version: Option<u8>) -> Result<Self, QRGenError> {
+    pub fn new(input: &str, ecc: Option<ECCLevel>, version: Option<u8>) -> Result<Self, QRGenError> {
+        let ecc = ecc.unwrap_or(ECCLevel::M);
         let version = match version {
             Some(v) => {
                 if !(1..=40).contains(&v) {

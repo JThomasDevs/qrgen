@@ -3,7 +3,7 @@ use qrgen::{QRCode, ECCLevel};
 #[test]
 fn data_bits_trace() {
     let input = "1";
-    let qr = QRCode::new(input, ECCLevel::M, Some(1)).unwrap();
+    let qr = QRCode::new(input, Some(ECCLevel::M), Some(1)).unwrap();
     
     eprintln!("QR matrix size: {}", qr.size());
     eprintln!("");

@@ -2,7 +2,7 @@ use qrgen::{QRCode, ECCLevel};
 
 #[test]
 fn check_col6() {
-    let qr = QRCode::new("A", ECCLevel::M, None).unwrap();
+    let qr = QRCode::new("A", Some(ECCLevel::M), None).unwrap();
     let size = qr.size();
     
     println!("Matrix size: {}", size);

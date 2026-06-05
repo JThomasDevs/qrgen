@@ -2,7 +2,7 @@ use qrgen::{QRCode, ECCLevel};
 
 #[test]
 fn check_finders() {
-    let qr = QRCode::new("A", ECCLevel::M, None).unwrap();
+    let qr = QRCode::new("A", Some(ECCLevel::M), None).unwrap();
     
     // Check finder patterns at key positions
     // Top-left finder: positions (0,0) through (6,6)
