@@ -27,12 +27,12 @@ pub fn render_png(matrix: &QRMatrix, size_px: u32, quiet_zone: bool) -> ImageBuf
         Rgba([255, 255, 255, 255]),
     );
 
+    let x_offset = margin * module_size;
+    let y_offset = margin * module_size;
+
     for j in 0..matrix_size {
         for i in 0..matrix_size {
             if is_dark(&matrix.get(i as usize, j as usize)) {
-                let x_offset = margin as u32 * module_size;
-                let y_offset = margin as u32 * module_size;
-
                 for dy in 0..module_size {
                     for dx in 0..module_size {
                         let px = x_offset + i * module_size + dx;

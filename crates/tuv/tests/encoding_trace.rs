@@ -1,36 +1,25 @@
-use tuv::{QRCode, ECCLevel};
+use tuv::{ECCLevel, Module, QRCode};
+
+fn map_module_char(module: Module) -> char {
+    match module {
+        Module::Finder(_) => 'F',
+        Module::Data(true) => '#',
+        Module::Data(false) => '.',
+        _ => '?',
+    }
+}
+
+fn render_row(qr: &QRCode, y: usize) -> String {
+    (0..qr.size())
+        .map(|x| map_module_char(qr.get_module(x, y)))
+        .collect()
+}
 
 #[test]
 fn data_bits_trace() {
-    let input = "1";
-    let qr = QRCode::new(input, Some(ECCLevel::M), Some(1)).unwrap();
-    
-    eprintln!("QR matrix size: {}", qr.size());
-    eprintln!("");
-    
-    eprintln!("Row 0:");
-    for i in 0..qr.size() {
-        let m = qr.get_module(i, 0);
-        let ch = match m {
-            tuv::Module::Finder(_) => 'F',
-            tuv::Module::Data(true) => '#',
-            tuv::Module::Data(false) => '.',
-            _ => '?',
-        };
-        eprint!("{}", ch);
-    }
-    eprintln!();
-    
-    eprintln!("Row 1:");
-    for i in 0..qr.size() {
-        let m = qr.get_module(i, 1);
-        let ch = match m {
-            tuv::Module::Finder(_) => 'F',
-            tuv::Module::Data(true) => '#',
-            tuv::Module::Data(false) => '.',
-            _ => '?',
-        };
-        eprint!("{}", ch);
-    }
-    eprintln!();
+    let qr = QRCode::new("1", Some(ECCLevel::M), Some(1)).unwrap();
+
+    assert_eq!(qr.size(), 21);
+    assert_eq!(render_row(&qr, 0), "FFFFFFF??#.#.?FFFFFFF");
+    assert_eq!(render_row(&qr, 1), "FFFFFFF??#..#?FFFFFFF");
 }

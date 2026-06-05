@@ -1,7 +1,4 @@
 use tuv::{QRMatrix, Module};
-use bitvec::slice::BitSlice;
-use bitvec::order::Lsb0;
-use tuv::matrix::data_placement::place_data;
 
 /// Print the data placement order for a version 1 matrix
 #[test]
@@ -60,8 +57,10 @@ fn trace_data_placement_order() {
     }
     
     eprintln!("\nTotal data positions available: {}", positions.len());
-    eprintln!("First 20 positions: {:?}", &positions[..20]);
-    eprintln!("Last 20 positions: {:?}", &positions[positions.len()-20..]);
+    let head_len = positions.len().min(20);
+    let tail_start = positions.len().saturating_sub(20);
+    eprintln!("First 20 positions: {:?}", &positions[..head_len]);
+    eprintln!("Last 20 positions: {:?}", &positions[tail_start..]);
     
     // For V1-M, we should have capacity for 16 data bytes = 128 bits
     // But we expect ~246 data modules total after function patterns

@@ -81,7 +81,7 @@ mod tests {
         assert_eq!(bit_length("1234"), 14);  // 1 triplet (10) + 1 digit (4) = 14
         assert_eq!(bit_length("12"), 7);     // exactly 2 digits = 7 bits
         assert_eq!(bit_length("1"), 4);      // exactly 1 digit = 4 bits
-        assert_eq!(bit_length("12345"), 17); // 1 triplet (10) + 2 digits (7) = 24
+        assert_eq!(bit_length("12345"), 17); // 1 triplet (10) + 2 digits (7) = 17
     }
 
     #[test]

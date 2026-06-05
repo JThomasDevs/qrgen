@@ -1,4 +1,4 @@
-﻿# Tuv
+# Tuv
 
 Pure-Rust QR code encoder with SVG and PNG output.
 

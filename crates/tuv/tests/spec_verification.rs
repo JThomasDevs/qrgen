@@ -23,15 +23,18 @@ fn scan_roundtrip() {
     let input = "1";
     let qr = QRCode::new(input, Some(ECCLevel::M), Some(1)).unwrap();
     
-    // Write PNG
+    // Write PNG to a unique temp file
     let png = qr.to_png(290, false);
-    png.save("/tmp/verify_test.png").unwrap();
-    
+    let temp_path = std::env::temp_dir().join(format!("tuv_verify_{}.png", std::process::id()));
+    png.save(&temp_path).unwrap();
+
     // Try zbar
     let output = Command::new("zbarimg")
-        .args(["-Sqr.enable", "/tmp/verify_test.png"])
+        .args(["-Sqr.enable", temp_path.to_str().expect("temp path must be valid UTF-8")])
         .output()
         .unwrap();
+
+    let _ = std::fs::remove_file(&temp_path);
     
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);

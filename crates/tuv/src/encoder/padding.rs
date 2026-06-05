@@ -20,14 +20,16 @@ pub fn pad_to_byte_boundary(bits: &mut EncodeBits) {
 }
 
 /// Calculate total data capacity in bytes for a given version and ECC level.
-pub fn data_capacity(version: u8, ecc: crate::error_correction::ECCLevel) -> usize {
+// TODO: implement capacity table for versions 2-40
+pub fn data_capacity(version: u8, ecc: crate::error_correction::ECCLevel) -> Option<usize> {
     use crate::error_correction::ECCLevel;
+    debug_assert!(version == 1, "data_capacity: unsupported version");
     match (version, ecc) {
-        (1, ECCLevel::L) => 17,
-        (1, ECCLevel::M) => 14,
-        (1, ECCLevel::Q) => 11,
-        (1, ECCLevel::H) => 7,
-        _ => 0,
+        (1, ECCLevel::L) => Some(17),
+        (1, ECCLevel::M) => Some(14),
+        (1, ECCLevel::Q) => Some(11),
+        (1, ECCLevel::H) => Some(7),
+        _ => None,
     }
 }
 
@@ -47,6 +49,6 @@ mod tests {
 
     #[test]
     fn test_data_capacity_table() {
-        assert_eq!(data_capacity(1, crate::error_correction::ECCLevel::L), 17);
+        assert_eq!(data_capacity(1, crate::error_correction::ECCLevel::L), Some(17));
     }
 }

@@ -9,7 +9,7 @@ fn check_finders() {
     // Top-right finder: positions (14,0) through (20,6) for version 1
     // Bottom-left finder: positions (0,14) through (6,20)
     
-    println!("Version: {}", qr.size() / 4 + 13);
+    println!("Version: {}", (qr.size() - 17) / 4);
     
     // Check a few key positions
     let checks = [

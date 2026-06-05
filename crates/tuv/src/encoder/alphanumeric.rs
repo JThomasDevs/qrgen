@@ -1,6 +1,6 @@
 //! Alphanumeric mode encoding.
 //!
-//! Encodes a restricted character set: 0-9, A-Z, and 9 special chars: +%,.-/:!
+//! Encodes a restricted character set: 0-9, A-Z, plus space, $, %, *, +, -, ., /, : (45 total).
 //! Each character maps to a value 0-44 using the QR spec's encoding table.
 //!
 //! Chunking rules (per spec):

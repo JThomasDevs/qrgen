@@ -2,7 +2,7 @@
 //!
 //! The QR spec defines 4 encoding modes. We implement 3:
 //! - **Numeric** — digits 0-9
-//! - **Alphanumeric** — 0-9, A-Z, and 9 special chars: +%,.-/:
+//! - **Alphanumeric** — 0-9, A-Z, plus space, $, %, *, +, -, ., /, : (45 total)
 //! - **Byte** — arbitrary UTF-8 (most flexible, used as fallback)
 //!
 //! Auto-selection picks the mode that produces the shortest encoded bit sequence.
