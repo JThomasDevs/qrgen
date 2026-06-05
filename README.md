@@ -4,6 +4,9 @@ Pure-Rust QR code encoder with SVG and PNG output.
 
 TUV, for QRs
 
+![Personal website](assets/vondal-dev.svg)
+
+
 ## Install
 
 ```toml
