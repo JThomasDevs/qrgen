@@ -1,4 +1,4 @@
-use qrgen::{QRCode, ECCLevel};
+use tuv::{QRCode, ECCLevel};
 
 #[test]
 fn check_col6() {
@@ -12,10 +12,10 @@ fn check_col6() {
     print!("Col 6: ");
     for j in 0..size {
         let ch = match qr.get_module(6, j) {
-            qrgen::Module::Timing(_) => 'T',
-            qrgen::Module::Finder(_) => 'F',
-            qrgen::Module::Data(true) => '#',
-            qrgen::Module::Data(false) => '.',
+            tuv::Module::Timing(_) => 'T',
+            tuv::Module::Finder(_) => 'F',
+            tuv::Module::Data(true) => '#',
+            tuv::Module::Data(false) => '.',
             _ => '?',
         };
         print!("{}", ch);

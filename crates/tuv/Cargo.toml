@@ -1,0 +1,20 @@
+[package]
+name = "tuv"
+version = "0.1.0"
+edition = "2021"
+description = "Pure-Rust QR code encoder with SVG and PNG output"
+license = "MIT"
+readme = "../../README.md"
+keywords = ["qrcode", "qr", "encoding", "svg", "png"]
+categories = ["encoding", "multimedia"]
+repository = "https://github.com/JThomasDevs/qrgen"
+homepage = "https://github.com/JThomasDevs/qrgen"
+
+[dependencies]
+bitvec = "1"
+image = "0.25"
+thiserror = "1"
+
+[dev-dependencies]
+pretty_assertions = "1"
+qrcode = "0.14.1"

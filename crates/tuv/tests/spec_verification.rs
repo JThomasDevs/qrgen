@@ -1,6 +1,6 @@
 //! Reference verification tests against ISO/IEC 18004 spec values.
 
-use qrgen::{QRCode, ECCLevel};
+use tuv::{QRCode, ECCLevel};
 
 #[test]
 fn svg_has_correct_module_count() {
@@ -69,11 +69,11 @@ fn module_counts_look_reasonable() {
     for j in 0..qr.size() {
         for i in 0..qr.size() {
             match qr.get_module(i, j) {
-                qrgen::Module::Finder(_) => finder += 1,
-                qrgen::Module::Timing(_) => timing += 1,
-                qrgen::Module::FormatInfo(_) => format_info += 1,
-                qrgen::Module::Data(true) => data_dark += 1,
-                qrgen::Module::Data(false) => data_light += 1,
+                tuv::Module::Finder(_) => finder += 1,
+                tuv::Module::Timing(_) => timing += 1,
+                tuv::Module::FormatInfo(_) => format_info += 1,
+                tuv::Module::Data(true) => data_dark += 1,
+                tuv::Module::Data(false) => data_light += 1,
                 _ => {}
             }
         }

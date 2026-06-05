@@ -1,4 +1,4 @@
-use qrgen::{ECCLevel, QRCode};
+use tuv::{ECCLevel, QRCode};
 
 fn main() {
     let qr = QRCode::new("https://vondal.dev", Some(ECCLevel::M), None).unwrap();

@@ -1,4 +1,4 @@
-use qrgen::{QRCode, ECCLevel};
+use tuv::{QRCode, ECCLevel};
 
 #[test]
 fn data_bits_trace() {
@@ -12,9 +12,9 @@ fn data_bits_trace() {
     for i in 0..qr.size() {
         let m = qr.get_module(i, 0);
         let ch = match m {
-            qrgen::Module::Finder(_) => 'F',
-            qrgen::Module::Data(true) => '#',
-            qrgen::Module::Data(false) => '.',
+            tuv::Module::Finder(_) => 'F',
+            tuv::Module::Data(true) => '#',
+            tuv::Module::Data(false) => '.',
             _ => '?',
         };
         eprint!("{}", ch);
@@ -25,9 +25,9 @@ fn data_bits_trace() {
     for i in 0..qr.size() {
         let m = qr.get_module(i, 1);
         let ch = match m {
-            qrgen::Module::Finder(_) => 'F',
-            qrgen::Module::Data(true) => '#',
-            qrgen::Module::Data(false) => '.',
+            tuv::Module::Finder(_) => 'F',
+            tuv::Module::Data(true) => '#',
+            tuv::Module::Data(false) => '.',
             _ => '?',
         };
         eprint!("{}", ch);

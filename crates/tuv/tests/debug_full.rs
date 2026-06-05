@@ -1,7 +1,7 @@
-use qrgen::{QRMatrix, Module};
+use tuv::{QRMatrix, Module};
 use bitvec::slice::BitSlice;
 use bitvec::order::Lsb0;
-use qrgen::matrix::data_placement::place_data;
+use tuv::matrix::data_placement::place_data;
 
 /// Print the data placement order for a version 1 matrix
 #[test]

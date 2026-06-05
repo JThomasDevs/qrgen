@@ -1,5 +1,5 @@
 //! Compare final module grid to the `qrcode` reference implementation.
-use qrgen::{ECCLevel, QRCode};
+use tuv::{ECCLevel, QRCode};
 use qrcode::{Color, EcLevel, QrCode, Version};
 
 fn ref_matrix(data: &[u8], version: Version, ecc: EcLevel) -> (usize, Vec<bool>) {

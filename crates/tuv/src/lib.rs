@@ -1,4 +1,18 @@
-//! QR code generation library.
+﻿//! QR code generation library.
+//!
+//! **Tuv** is named for the three letters after QRS in the alphabet — a nod to QR
+//! codes and the sequential nature of encoding.
+//!
+//! # Quick start
+//!
+//! ```
+//! use tuv::QRCode;
+//!
+//! let qr = QRCode::new("Hello, world!", None, None).unwrap();
+//! let svg = qr.to_svg(true);
+//! let png = qr.to_png(300, true);
+//! # let _ = (svg, png);
+//! ```
 //!
 //! # Architecture
 //!

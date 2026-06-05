@@ -1,4 +1,4 @@
-use qrgen::{QRCode, ECCLevel};
+use tuv::{QRCode, ECCLevel};
 
 #[test]
 fn check_timing() {
@@ -12,8 +12,8 @@ fn check_timing() {
     let mut col6_count = 0;
     
     for i in 0..size {
-        if matches!(qr.get_module(i, 6), qrgen::Module::Timing(_)) { row6_count += 1; }
-        if matches!(qr.get_module(6, i), qrgen::Module::Timing(_)) { col6_count += 1; }
+        if matches!(qr.get_module(i, 6), tuv::Module::Timing(_)) { row6_count += 1; }
+        if matches!(qr.get_module(6, i), tuv::Module::Timing(_)) { col6_count += 1; }
     }
     
     println!("Timing modules in row 6: {}", row6_count);
@@ -24,10 +24,10 @@ fn check_timing() {
     print!("Row 6: ");
     for i in 0..size {
         let ch = match qr.get_module(i, 6) {
-            qrgen::Module::Timing(_) => 'T',
-            qrgen::Module::Finder(_) => 'F',
-            qrgen::Module::Data(true) => '#',
-            qrgen::Module::Data(false) => '.',
+            tuv::Module::Timing(_) => 'T',
+            tuv::Module::Finder(_) => 'F',
+            tuv::Module::Data(true) => '#',
+            tuv::Module::Data(false) => '.',
             _ => '?',
         };
         print!("{}", ch);

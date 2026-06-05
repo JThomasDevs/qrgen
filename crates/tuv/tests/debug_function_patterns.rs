@@ -1,4 +1,4 @@
-use qrgen::matrix::QRMatrix;
+use tuv::matrix::QRMatrix;
 
 #[test]
 fn inspect_function_patterns_only() {
@@ -14,10 +14,10 @@ fn inspect_function_patterns_only() {
     for j in 0..m.size {
         for i in 0..m.size {
             match m.get(i, j) {
-                qrgen::Module::Finder(_) => finder += 1,
-                qrgen::Module::Timing(_) => timing += 1,
-                qrgen::Module::Data(true) => { data_true += 1; }
-                qrgen::Module::Data(false) => { data_false += 1; }
+                tuv::Module::Finder(_) => finder += 1,
+                tuv::Module::Timing(_) => timing += 1,
+                tuv::Module::Data(true) => { data_true += 1; }
+                tuv::Module::Data(false) => { data_false += 1; }
                 _ => {}
             }
         }
@@ -34,10 +34,10 @@ fn inspect_function_patterns_only() {
     eprintln!("\nRow 0:");
     for i in 0..m.size {
         match m.get(i, 0) {
-            qrgen::Module::Data(false) => eprint!("."),
-            qrgen::Module::Data(true) => eprint!("#"),
-            qrgen::Module::Finder(_) => eprint!("F"),
-            qrgen::Module::Timing(_) => eprint!("T"),
+            tuv::Module::Data(false) => eprint!("."),
+            tuv::Module::Data(true) => eprint!("#"),
+            tuv::Module::Finder(_) => eprint!("F"),
+            tuv::Module::Timing(_) => eprint!("T"),
             _ => eprint!("?"),
         }
     }
@@ -47,10 +47,10 @@ fn inspect_function_patterns_only() {
     eprintln!("\nRow 7:");
     for i in 0..m.size {
         match m.get(i, 7) {
-            qrgen::Module::Data(false) => eprint!("."),
-            qrgen::Module::Data(true) => eprint!("#"),
-            qrgen::Module::Finder(_) => eprint!("F"),
-            qrgen::Module::Timing(_) => eprint!("T"),
+            tuv::Module::Data(false) => eprint!("."),
+            tuv::Module::Data(true) => eprint!("#"),
+            tuv::Module::Finder(_) => eprint!("F"),
+            tuv::Module::Timing(_) => eprint!("T"),
             _ => eprint!("?"),
         }
     }

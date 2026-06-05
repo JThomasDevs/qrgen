@@ -1,7 +1,9 @@
 //! Top-level orchestration of the encode pipeline.
 //!
 //! ```rust,ignore
-//! let qr = QRCode::new("Hello, world!", ECCLevel::M, None)?;
+//! use tuv::QRCode;
+//!
+//! let qr = QRCode::new("Hello, world!", None, None)?;
 //! let svg = qr.to_svg(true);
 //! let png = qr.to_png(300, true);
 //! ```
@@ -142,6 +144,18 @@ impl QRCode {
     #[inline]
     pub fn mask_id(&self) -> u8 {
         self.mask_id
+    }
+
+    /// QR version (1-40) used for this code.
+    #[inline]
+    pub fn version(&self) -> u8 {
+        self.version
+    }
+
+    /// Error correction level applied during encoding.
+    #[inline]
+    pub fn ecc(&self) -> ECCLevel {
+        self.ecc
     }
 
     #[cfg(debug_assertions)]

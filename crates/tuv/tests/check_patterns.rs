@@ -1,4 +1,4 @@
-use qrgen::{QRCode, ECCLevel};
+use tuv::{QRCode, ECCLevel};
 
 #[test]
 fn check_finders() {

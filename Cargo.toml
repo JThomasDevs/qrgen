@@ -1,16 +1,3 @@
-[package]
-name = "qrgen"
-version = "0.1.0"
-edition = "2021"
-description = "Pure-Rust QR code generator CLI with SVG and PNG output"
-license = "MIT"
-
-[dependencies]
-clap = { version = "4", features = ["derive"] }
-bitvec = "1"
-image = "0.25"
-thiserror = "1"
-
-[dev-dependencies]
-pretty_assertions = "1"
-qrcode = "0.14.1"
+﻿[workspace]
+members = ["crates/tuv", "crates/tuv-cli"]
+resolver = "2"

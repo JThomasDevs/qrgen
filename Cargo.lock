@@ -791,18 +791,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "qrgen"
-version = "0.1.0"
-dependencies = [
- "bitvec",
- "clap",
- "image",
- "pretty_assertions",
- "qrcode",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "quick-error"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1048,6 +1036,26 @@ dependencies = [
  "quick-error",
  "weezl",
  "zune-jpeg",
+]
+
+[[package]]
+name = "tuv"
+version = "0.1.0"
+dependencies = [
+ "bitvec",
+ "image",
+ "pretty_assertions",
+ "qrcode",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "tuv-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "image",
+ "tuv",
 ]
 
 [[package]]
