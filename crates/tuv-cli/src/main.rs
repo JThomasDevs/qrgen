@@ -42,8 +42,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Q" => ECCLevel::Q,
         "H" => ECCLevel::H,
         _ => {
-            eprintln!("invalid ECC level: {} (must be L, M, Q, or H)", args.ecc);
-            std::process::exit(1);
+            return Err(format!(
+                "invalid ECC level: {} (must be L, M, Q, or H)",
+                args.ecc
+            )
+            .into());
         }
     };
 
@@ -52,12 +55,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.png {
         let img = qr.to_png(args.size, args.quiet_zone);
         img.save(&args.output)?;
-        println!("wrote {}", args.output.display());
     } else {
         let svg = qr.to_svg(args.quiet_zone);
         std::fs::write(&args.output, svg)?;
-        println!("wrote {}", args.output.display());
     }
 
+    println!("wrote {}", args.output.display());
     Ok(())
 }

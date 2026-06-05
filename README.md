@@ -8,7 +8,7 @@ The name **Tuv** follows QRS in the alphabet (Q, R, S ... T, U, V) — a nod to 
 
 ```toml
 [dependencies]
-tuv = "0.1"
+tuv = "0.1.0"
 ```
 
 ## Usage
