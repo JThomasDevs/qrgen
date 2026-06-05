@@ -1,6 +1,6 @@
 [package]
 name = "tuv"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Pure-Rust QR code encoder with SVG and PNG output"
 license = "MIT"
