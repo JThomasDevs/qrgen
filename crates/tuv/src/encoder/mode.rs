@@ -11,6 +11,8 @@ use bitvec::order::Msb0;
 use bitvec::vec::BitVec;
 use crate::qrcode::QRGenError;
 
+use super::bits::push_bits;
+
 /// Bit stream for QR payload bits: first pushed bit is the MSB of the logical stream.
 pub type EncodeBits = BitVec<u8, Msb0>;
 
@@ -67,14 +69,6 @@ pub fn char_count_bits(mode: Mode, version: u8) -> usize {
         (Mode::Byte, 1) => 16,
         (Mode::Byte, 2) => 16,
         _ => unreachable!(),
-    }
-}
-
-/// Push `width` low bits of `value` into the BitVec (MSB first).
-fn push_bits(bits: &mut EncodeBits, value: u32, width: usize) {
-    for i in 0..width {
-        let bit = (value >> (width - 1 - i)) & 1;
-        bits.push(bit != 0);
     }
 }
 

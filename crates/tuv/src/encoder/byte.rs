@@ -5,15 +5,8 @@
 //!
 //! Each byte → 8 bits. Simple and universal.
 
+use super::bits::push_bits;
 use super::mode::EncodeBits;
-
-/// Push `width` low bits of `value` into the BitVec (MSB first).
-fn push_bits(bits: &mut EncodeBits, value: u32, width: usize) {
-    for i in 0..width {
-        let bit = (value >> (width - 1 - i)) & 1;
-        bits.push(bit != 0);
-    }
-}
 
 /// Encode a string as UTF-8 bytes into the bit vector.
 pub fn encode(input: &str, bits: &mut EncodeBits) {

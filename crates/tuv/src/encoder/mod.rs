@@ -1,5 +1,6 @@
 //! Encoder module — handles mode selection and data encoding.
 
+pub mod bits;
 pub mod mode;
 pub mod numeric;
 pub mod alphanumeric;

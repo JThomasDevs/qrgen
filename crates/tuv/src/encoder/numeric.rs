@@ -8,6 +8,7 @@
 //! Groups are processed left-to-right. The final group uses the smallest
 //! representation if it has fewer than 3 digits.
 
+use super::bits::push_bits;
 use super::mode::EncodeBits;
 
 /// Number of bits needed to encode a numeric string.
@@ -26,14 +27,6 @@ pub fn bit_length(input: &str) -> usize {
         1 => bits + 4,  // single digit = 4 bits
         2 => bits + 7,  // two digits = 7 bits
         _ => unreachable!(),
-    }
-}
-
-/// Push `width` low bits of `value` into the BitVec (MSB first).
-fn push_bits(bits: &mut EncodeBits, value: u32, width: usize) {
-    for i in 0..width {
-        let bit = (value >> (width - 1 - i)) & 1;
-        bits.push(bit != 0);
     }
 }
 

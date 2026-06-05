@@ -9,6 +9,7 @@
 //!
 //! The value calculation: (val1 * 45) + val2 for a pair.
 
+use super::bits::push_bits;
 use super::mode::EncodeBits;
 
 /// QR spec alphanumeric encoding table: char → value (0-44)
@@ -32,14 +33,6 @@ fn char_value(c: char) -> u8 {
         }
     }
     panic!("character '{}' not in alphanumeric set", c);
-}
-
-/// Push `width` low bits of `value` into the BitVec (MSB first).
-fn push_bits(bits: &mut EncodeBits, value: u32, width: usize) {
-    for i in 0..width {
-        let bit = (value >> (width - 1 - i)) & 1;
-        bits.push(bit != 0);
-    }
 }
 
 /// Number of bits needed to encode an alphanumeric string.
