@@ -35,10 +35,6 @@ impl GF256 {
         for i in 0..255 {
             exp[i] = value as u8;
             log[value as usize] = i as u8;
-            // alpha^i has inverse alpha^(255-i), so inv[alpha^i] = alpha^(255-i)
-            if i > 0 {
-                inv[value as usize] = exp[(255 - i) as usize];
-            }
 
             // Multiply by alpha (2) with reduction mod PRIM_POLY
             value <<= 1;
@@ -51,9 +47,11 @@ impl GF256 {
         exp[255] = exp[0];
         // log[0] = 255 (sentinel - 0 has no log)
         log[0] = 0xFF;
-        // inv[0] unused, set to 0
+        // inv[a] = a^-1; populate after exp is complete so lookups are valid
+        for i in 1..255 {
+            inv[exp[i] as usize] = exp[255 - i];
+        }
         inv[0] = 0;
-        // inv[1] = 1 (1 is its own inverse)
         inv[1] = 1;
 
         Self { exp, log, inv }
@@ -93,17 +91,10 @@ impl GF256 {
     }
 
     /// Inverse of a field element: a^-1
-    /// Returns 0 if a is 0.
-    ///
-    /// Using the property: a = alpha^k ⇒ a^-1 = alpha^(255-k)
+    /// Returns 0 if a is 0 (via precomputed `inv[0]`).
     #[inline]
     pub fn inv(&self, a: u8) -> u8 {
-        if a == 0 {
-            return 0;
-        }
-        // a = exp[k] ⇒ inv[a] = exp[255 - k]
-        let k = self.log[a as usize] as usize;
-        self.exp[(255 - k) % 255]
+        self.inv[a as usize]
     }
 
     /// Exponentiate: alpha^k in the field
