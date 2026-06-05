@@ -2,7 +2,7 @@
 
 Pure-Rust QR code encoder with SVG and PNG output.
 
-The name **Tuv** follows QRS in the alphabet (Q, R, S ... T, U, V) — a nod to QR codes and sequential encoding.
+TUV, for QRs
 
 ## Install
 
