@@ -4,8 +4,11 @@ Pure-Rust QR code encoder with SVG and PNG output.
 
 TUV, for QRs
 
-![Personal website](assets/vondal-dev.svg)
-
+<!-- markdownlint-disable MD033 -->
+<p align="center">
+  <img src="assets/vondal-dev.svg" alt="Personal website" width="120" />
+</p>
+<!-- markdownlint-enable MD033 -->
 
 ## Install
 
