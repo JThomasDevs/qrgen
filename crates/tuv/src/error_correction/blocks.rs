@@ -138,6 +138,29 @@ pub fn ecc_codewords_per_block(version: u8, ecc: super::ECCLevel) -> usize {
     spec(version, ecc).ecc_per_block as usize
 }
 
+/// Total ECC codewords across all blocks for `(version, ecc)`.
+pub fn total_ecc_codewords(version: u8, ecc: super::ECCLevel) -> usize {
+    let s = spec(version, ecc);
+    let num_blocks = s.g1_blocks as usize + s.g2_blocks as usize;
+    num_blocks * s.ecc_per_block as usize
+}
+
+/// Maximum number of erratic modules that can be corrected before data is lost.
+///
+/// Formula matches the reference `qrcode` crate (ISO/IEC 18004 recovery capacity).
+pub fn max_allowed_errors(version: u8, ecc: super::ECCLevel) -> usize {
+    let ec_bytes = total_ecc_codewords(version, ecc);
+
+    let p = match (version, ecc) {
+        (1, super::ECCLevel::L) => 3,
+        (2, super::ECCLevel::L) | (1, super::ECCLevel::M) => 2,
+        (1, _) | (3, super::ECCLevel::L) => 1,
+        _ => 0,
+    };
+
+    (ec_bytes - p) / 2
+}
+
 /// Split the byte-padded data into blocks per Table 9 and compute ECC.
 pub fn split_into_blocks(
     data: &[u8],

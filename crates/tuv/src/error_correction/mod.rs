@@ -14,6 +14,7 @@ pub use reed_solomon::GF256;
 pub use generate::generate_ecc;
 pub use blocks::{
     split_into_blocks, interleave, DataBlock, total_data_codewords, ecc_codewords_per_block,
+    max_allowed_errors,
 };
 
 /// Error correction level.

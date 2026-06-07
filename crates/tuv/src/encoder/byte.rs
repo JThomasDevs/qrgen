@@ -10,13 +10,23 @@ use super::mode::EncodeBits;
 
 /// Encode a string as UTF-8 bytes into the bit vector.
 pub fn encode(input: &str, bits: &mut EncodeBits) {
-    for byte in input.bytes() {
+    encode_bytes(input.as_bytes(), bits);
+}
+
+/// Encode raw bytes into the bit vector (byte mode payload).
+pub fn encode_bytes(input: &[u8], bits: &mut EncodeBits) {
+    for &byte in input {
         push_bits(bits, byte as u32, 8);
     }
 }
 
 /// Number of bits = bytes × 8
 pub fn bit_length(input: &str) -> usize {
+    input.len() * 8
+}
+
+/// Number of bits for a raw byte slice in byte mode.
+pub fn bit_length_bytes(input: &[u8]) -> usize {
     input.len() * 8
 }
 
