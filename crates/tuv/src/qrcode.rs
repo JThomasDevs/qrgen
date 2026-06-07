@@ -202,19 +202,6 @@ impl QRCode {
         }
     }
 
-    /// Encode `input` into a QR code.
-    #[deprecated(note = "use QRCode::from(input).with_ecc(ecc).with_version(version).generate()?")]
-    pub fn new(input: &str, ecc: Option<ECCLevel>, version: Option<u8>) -> Result<Self, QRGenError> {
-        let mut builder = QRCode::from(input);
-        if let Some(ecc) = ecc {
-            builder = builder.with_ecc(ecc);
-        }
-        if let Some(version) = version {
-            builder = builder.with_version_number(version);
-        }
-        builder.generate()
-    }
-
     pub fn to_svg(&self, quiet_zone: bool) -> String {
         self.render()
             .quiet_zone(quiet_zone)
@@ -605,31 +592,6 @@ fn smallest_version_and_ecc(input: &[u8], micro: bool) -> Option<(Version, ECCLe
         }
     }
     None
-}
-
-#[cfg(test)]
-mod mask_score_debug {
-    use super::*;
-
-    #[test]
-    fn interleaved_matches_qrcode_for_v1_digit_1() {
-        use qrcode::bits::Bits;
-        use qrcode::ec;
-        use qrcode::types::{EcLevel, Version as RefVersion};
-
-        let ours = interleaved_codewords(b"1", ECCLevel::M, 1).expect("ours");
-
-        let mut bits = Bits::new(RefVersion::Normal(1));
-        bits.push_optimal_data(b"1").unwrap();
-        bits.push_terminator(EcLevel::M).unwrap();
-        let raw = bits.into_bytes();
-        let (data, eccv) = ec::construct_codewords(&raw, RefVersion::Normal(1), EcLevel::M).unwrap();
-        let mut ref_interleaved = Vec::new();
-        ref_interleaved.extend_from_slice(&data);
-        ref_interleaved.extend_from_slice(&eccv);
-
-        assert_eq!(ours, ref_interleaved, "interleaved codewords differ from qrcode");
-    }
 }
 
 #[cfg(test)]

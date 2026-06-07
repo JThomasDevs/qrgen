@@ -341,28 +341,29 @@ impl Bits {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use qrcode::bits::Bits as RefBits;
-    use qrcode::types::{EcLevel, Version as RefVersion};
 
     #[test]
-    fn eci_9_matches_reference() {
+    fn eci_9_encodes_mode_and_assignment() {
         let mut bits = Bits::new(Version::Normal(1));
         bits.push_eci_designator(9).unwrap();
-        let mut ref_bits = RefBits::new(RefVersion::Normal(1));
-        ref_bits.push_eci_designator(9).unwrap();
-        assert_eq!(bits.into_bytes(), ref_bits.into_bytes());
+        let bytes = bits.into_bytes();
+        assert_eq!(bytes, [0x70, 0x90]);
     }
 
     #[test]
-    fn optimal_data_mixed_matches_reference() {
+    fn optimal_data_mixed_segments_and_padding() {
         let data = b"ABC123hello";
         let mut bits = Bits::new(Version::Normal(1));
         bits.push_optimal_data(data).unwrap();
         bits.push_terminator(ECCLevel::M).unwrap();
-
-        let mut ref_bits = RefBits::new(RefVersion::Normal(1));
-        ref_bits.push_optimal_data(data).unwrap();
-        ref_bits.push_terminator(EcLevel::M).unwrap();
-        assert_eq!(bits.into_bytes(), ref_bits.into_bytes());
+        let bytes = bits.into_bytes();
+        assert_eq!(bytes.len(), 16);
+        assert_eq!(
+            bytes,
+            [
+                0x20, 0x31, 0xcd, 0x43, 0xa1, 0x75, 0x01, 0x5a, 0x19, 0x5b, 0x1b, 0x1b,
+                0xc0, 0xec, 0x11, 0xec
+            ]
+        );
     }
 }

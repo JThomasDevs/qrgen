@@ -88,14 +88,14 @@ impl<'a> Parser<'a> {
     /// Creates a new iterator which parse the data into segments that only
     /// contains their exclusive subsets. No optimization is done at this point.
     ///
-    ///     use qrcode::optimize::{Parser, Segment};
-    ///     use qrcode::types::Mode::{Alphanumeric, Numeric, Byte};
+    /// ```
+    /// use tuv::encoder::{Parser, Segment, Mode};
     ///
-    ///     let parse_res = Parser::new(b"ABC123abcd").collect::<Vec<Segment>>();
-    ///     assert_eq!(parse_res, vec![Segment { mode: Alphanumeric, begin: 0, end: 3 },
-    ///                                Segment { mode: Numeric, begin: 3, end: 6 },
-    ///                                Segment { mode: Byte, begin: 6, end: 10 }]);
-    ///
+    /// let parse_res = Parser::new(b"ABC123abcd").collect::<Vec<Segment>>();
+    /// assert_eq!(parse_res, vec![Segment { mode: Mode::Alphanumeric, begin: 0, end: 3 },
+    ///                            Segment { mode: Mode::Numeric, begin: 3, end: 6 },
+    ///                            Segment { mode: Mode::Byte, begin: 6, end: 10 }]);
+    /// ```
     pub fn new(data: &[u8]) -> Parser<'_> {
         Parser {
             ecs_iter: EcsIter { base: data.iter(), index: 0, ended: false },
