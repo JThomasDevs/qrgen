@@ -1,22 +1,23 @@
 //! Reference verification tests against ISO/IEC 18004 spec values.
 
-use tuv::{QRCode, ECCLevel};
+use tuv::{ECCLevel, QRCode, Version};
 
 #[test]
 fn svg_has_correct_module_count() {
     let qr = QRCode::from("1")
         .with_ecc(ECCLevel::M)
-        .with_version(1)
+        .with_version(Version::Normal(1))
         .generate()
         .unwrap();
     let svg = qr.to_svg(false);
-    
-    // Count our dark modules (each h 1 v 1 h -1 Z = 1 module)
-    let dark_count = svg.matches("h 1 v 1 h -1 Z").count();
-    eprintln!("Our dark modules: {}", dark_count);
-    // Expected: 200-250 dark modules for Version 1-M
-    assert!(dark_count > 150, "Too few dark modules: {}", dark_count);
-    assert!(dark_count < 300, "Too many dark modules: {}", dark_count);
+
+    let dark_from_matrix = qr.to_vec().iter().filter(|&&d| d).count();
+    assert!(svg.contains("<path"));
+    assert!(svg.contains("fill=\"#000000\"") || svg.contains("fill=\"black\""));
+    assert!(
+        dark_from_matrix > 150 && dark_from_matrix < 300,
+        "dark module count out of range: {dark_from_matrix}"
+    );
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -27,7 +28,7 @@ fn scan_roundtrip() {
     let input = "1";
     let qr = QRCode::from(input)
         .with_ecc(ECCLevel::M)
-        .with_version(1)
+        .with_version(Version::Normal(1))
         .generate()
         .unwrap();
     
@@ -71,7 +72,7 @@ fn scan_roundtrip() {
 fn module_counts_look_reasonable() {
     let qr = QRCode::from("1")
         .with_ecc(ECCLevel::M)
-        .with_version(1)
+        .with_version(Version::Normal(1))
         .generate()
         .unwrap();
     

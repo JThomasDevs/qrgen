@@ -1,4 +1,4 @@
-use tuv::{ECCLevel, Module, QRCode};
+use tuv::{ECCLevel, Module, QRCode, Version};
 
 fn map_module_char(module: Module) -> char {
     match module {
@@ -19,7 +19,7 @@ fn render_row(qr: &QRCode, y: usize) -> String {
 fn data_bits_trace() {
     let qr = QRCode::from("1")
         .with_ecc(ECCLevel::M)
-        .with_version(1)
+        .with_version(Version::Normal(1))
         .generate()
         .unwrap();
 

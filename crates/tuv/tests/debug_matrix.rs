@@ -1,10 +1,10 @@
-use tuv::{ECCLevel, QRCode};
+use tuv::{ECCLevel, QRCode, Version};
 
 #[test]
 fn debug_matrix() {
     let qr = QRCode::from("1")
         .with_ecc(ECCLevel::M)
-        .with_version(1)
+        .with_version(Version::Normal(1))
         .generate()
         .unwrap();
     let debug = qr.debug_matrix();
