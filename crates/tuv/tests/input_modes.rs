@@ -101,6 +101,21 @@ fn from_bytes_numeric_encodes() {
 }
 
 #[test]
+fn from_bytes_ascii_uses_byte_mode() {
+    let bytes = b"Hello";
+    assert_eq!(best_mode_bytes(bytes, 1), Mode::Byte);
+
+    let qr = QRCode::from_bytes(bytes)
+        .with_ecc(ECCLevel::L)
+        .with_version(Version::Normal(1))
+        .generate()
+        .expect("ASCII bytes should encode in byte mode");
+    assert_eq!(qr.version(), Version::Normal(1));
+    assert_eq!(qr.width(), 21);
+    assert_eq!(bytes.len(), 5);
+}
+
+#[test]
 fn kanji_input_selects_byte_mode() {
     let input = "日本語";
     assert_eq!(best_mode(input, 1), Mode::Byte);
