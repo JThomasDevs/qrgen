@@ -1,15 +1,13 @@
 //! Mode selection and indicator encoding.
 //!
-//! The QR spec defines 4 encoding modes. We implement 3:
-//! - **Numeric** — digits 0-9
-//! - **Alphanumeric** — 0-9, A-Z, plus space, $, %, *, +, -, ., /, : (45 total)
-//! - **Byte** — arbitrary UTF-8 (most flexible, used as fallback)
-//!
-//! Auto-selection picks the mode that produces the shortest encoded bit sequence.
+//! The QR spec defines 4 encoding modes:
+//! - **Numeric**, **Alphanumeric**, **Byte**, and **Kanji** (Shift JIS).
+
+use std::cmp::Ordering;
 
 use bitvec::order::Msb0;
 use bitvec::vec::BitVec;
-use crate::qrcode::QRGenError;
+use crate::types::{QRGenError, Version};
 
 use super::bits::push_bits;
 
@@ -22,33 +20,109 @@ pub enum Mode {
     Numeric,
     Alphanumeric,
     Byte,
+    Kanji,
 }
-
 impl Mode {
     /// Returns true if this mode can encode the given input.
     pub fn can_encode(&self, input: &str) -> bool {
+        self.can_encode_bytes(input.as_bytes())
+    }
+
+    /// Returns true if this mode can encode the given byte slice.
+    pub fn can_encode_bytes(&self, input: &[u8]) -> bool {
         match self {
-            Mode::Numeric => input.chars().all(|c| c.is_ascii_digit()),
-            Mode::Alphanumeric => input.chars().all(Self::is_alphanumeric_char),
-            Mode::Byte => true, // Byte handles everything
+            Mode::Numeric => input.iter().all(|b| b.is_ascii_digit()),
+            Mode::Alphanumeric => input.iter().all(|&b| Self::is_alphanumeric_byte(b)),
+            Mode::Byte => true,
+            Mode::Kanji => input.len().is_multiple_of(2),
         }
     }
 
-    /// Check if a char is in the alphanumeric special set.
-    fn is_alphanumeric_char(c: char) -> bool {
-        matches!(c, '0'..='9' | 'A'..='Z' | ' ' | '$' | '%' | '*' | '+' | '-' | '.' | '/' | ':')
+    fn is_alphanumeric_byte(b: u8) -> bool {
+        matches!(
+            b,
+            b'0'..=b'9'
+                | b'A'..=b'Z'
+                | b' '
+                | b'$'
+                | b'%'
+                | b'*'
+                | b'+'
+                | b'-'
+                | b'.'
+                | b'/'
+                | b':'
+        )
     }
 
-    /// 4-bit mode indicator per ISO/IEC 18004 Table 2.
+    /// 4-bit mode indicator per ISO/IEC 18004 Table 2 (Normal QR).
     pub fn indicator_bits(&self) -> u8 {
         match self {
             Mode::Numeric => 0b0001,
             Mode::Alphanumeric => 0b0010,
             Mode::Byte => 0b0100,
+            Mode::Kanji => 0b1000,
+        }
+    }
+
+    pub fn length_bits_count(self, version: Version) -> usize {
+        match version {
+            Version::Micro(a) => {
+                let a = a as usize;
+                match self {
+                    Mode::Numeric => 2 + a,
+                    Mode::Alphanumeric | Mode::Byte => 1 + a,
+                    Mode::Kanji => a,
+                }
+            }
+            Version::Normal(1..=9) => match self {
+                Mode::Numeric => 10,
+                Mode::Alphanumeric => 9,
+                Mode::Byte | Mode::Kanji => 8,
+            },
+            Version::Normal(10..=26) => match self {
+                Mode::Numeric => 12,
+                Mode::Alphanumeric => 11,
+                Mode::Byte => 16,
+                Mode::Kanji => 10,
+            },
+            Version::Normal(_) => match self {
+                Mode::Numeric => 14,
+                Mode::Alphanumeric => 13,
+                Mode::Byte => 16,
+                Mode::Kanji => 12,
+            },
+        }
+    }
+
+    pub fn data_bits_count(self, raw_data_len: usize) -> usize {
+        match self {
+            Mode::Numeric => (raw_data_len * 10 + 2) / 3,
+            Mode::Alphanumeric => (raw_data_len * 11 + 1) / 2,
+            Mode::Byte => raw_data_len * 8,
+            Mode::Kanji => raw_data_len * 13,
+        }
+    }
+
+    pub fn max(self, other: Self) -> Self {
+        match self.partial_cmp(&other) {
+            Some(Ordering::Greater) => self,
+            Some(_) => other,
+            None => Mode::Byte,
         }
     }
 }
 
+impl PartialOrd for Mode {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (*self, *other) {
+            (a, b) if a == b => Some(Ordering::Equal),
+            (Mode::Numeric, Mode::Alphanumeric) | (_, Mode::Byte) => Some(Ordering::Less),
+            (Mode::Alphanumeric, Mode::Numeric) | (Mode::Byte, _) => Some(Ordering::Greater),
+            _ => None,
+        }
+    }
+}
 /// Character count field bit lengths per ISO/IEC 18004 Table 3.
 pub fn char_count_bits(mode: Mode, version: u8) -> usize {
     let version = version.max(1);
@@ -68,76 +142,126 @@ pub fn char_count_bits(mode: Mode, version: u8) -> usize {
         (Mode::Byte, 0) => 8,
         (Mode::Byte, 1) => 16,
         (Mode::Byte, 2) => 16,
-        _ => unreachable!(),
-    }
+        (Mode::Kanji, 0) => 8,
+        (Mode::Kanji, 1) => 10,
+        (Mode::Kanji, 2) => 12,
+        _ => unreachable!(),    }
 }
 
 /// Estimated total encoded bit length for a given mode (mode indicator +
 /// char count + mode-specific data bits, *not* including terminator/padding).
 pub fn estimated_bit_length(input: &str, mode: Mode, version: u8) -> usize {
-    4 + char_count_bits(mode, version) + mode.data_bits_for_string(input)
+    estimated_bit_length_bytes(input.as_bytes(), mode, version)
 }
 
+/// Estimated bit length for raw byte input.
+pub fn estimated_bit_length_bytes(input: &[u8], mode: Mode, version: u8) -> usize {
+    let v = Version::Normal(i16::from(version));
+    v.mode_bits_count() + mode.length_bits_count(v) + mode.data_bits_for_bytes(input)
+}
 /// How many data bits are needed to encode the full string in this mode.
 impl Mode {
     pub fn data_bits_for_string(&self, input: &str) -> usize {
+        self.data_bits_for_bytes(input.as_bytes())
+    }
+
+    pub fn data_bits_for_bytes(&self, input: &[u8]) -> usize {
         match self {
-            Mode::Numeric => crate::encoder::numeric::bit_length(input),
-            Mode::Alphanumeric => crate::encoder::alphanumeric::bit_length(input),
-            Mode::Byte => input.len() * 8,
+            Mode::Numeric => {
+                let n = input.len();
+                let full_triplets = n / 3;
+                let remainder = n % 3;
+                let bits = full_triplets * 10;
+                match remainder {
+                    0 => bits,
+                    1 => bits + 4,
+                    2 => bits + 7,
+                    _ => unreachable!(),
+                }
+            }
+            Mode::Alphanumeric => {
+                let chars = input.len();
+                (chars / 2) * 11 + (chars % 2) * 6
+            }
+            Mode::Byte => crate::encoder::byte::bit_length_bytes(input),
+            Mode::Kanji => crate::encoder::kanji::bit_length_bytes(input),
         }
     }
 }
-
 /// Auto-select the best mode for the given input string.
 pub fn best_mode(input: &str, version: u8) -> Mode {
-    let candidates = [Mode::Numeric, Mode::Alphanumeric, Mode::Byte];
-    let mut best = (Mode::Byte, usize::MAX);
-
-    for mode in candidates {
-        if !mode.can_encode(input) {
-            continue;
-        }
-        let bits = estimated_bit_length(input, mode, version);
-        if bits < best.1 {
-            best = (mode, bits);
-        }
-    }
-
-    best.0
+    best_mode_bytes(input.as_bytes(), version)
 }
 
+/// Auto-select the best single mode for raw byte input (legacy helper).
+pub fn best_mode_bytes(input: &[u8], version: u8) -> Mode {
+    use crate::encoder::optimize::{Optimizer, Parser};
+
+    let v = Version::Normal(i16::from(version));
+    let segments = Optimizer::new(Parser::new(input).optimize(v), v).collect::<Vec<_>>();
+    segments.first().map(|s| s.mode).unwrap_or(Mode::Byte)
+}
 /// Encoder — handles mode selection and bit stream generation.
 pub struct Encoder;
 
 impl Encoder {
     /// Encode a string with auto-selected best mode.
     pub fn encode(input: &str, version: u8) -> Result<EncodeBits, QRGenError> {
-        let mode = best_mode(input, version);
-        Self::encode_with_mode(input, mode, version)
+        Self::encode_bytes(input.as_bytes(), version)
     }
 
+    /// Encode raw bytes using the multi-segment optimizer.
+    pub fn encode_bytes(input: &[u8], version: u8) -> Result<EncodeBits, QRGenError> {
+        let mut bits = crate::bits::Bits::new(Version::Normal(i16::from(version)));
+        bits.push_optimal_data(input)?;
+        bits_to_encode_bits(&bits)
+    }
     /// Encode with a specific mode.
     pub fn encode_with_mode(input: &str, mode: Mode, version: u8) -> Result<EncodeBits, QRGenError> {
+        Self::encode_bytes_with_mode(input.as_bytes(), mode, version)
+    }
+
+    /// Encode raw bytes with a specific mode.
+    pub fn encode_bytes_with_mode(
+        input: &[u8],
+        mode: Mode,
+        version: u8,
+    ) -> Result<EncodeBits, QRGenError> {
         let mut bits = EncodeBits::new();
 
-        // Mode indicator (4 bits)
         push_bits(&mut bits, mode.indicator_bits() as u32, 4);
 
-        // Character count
-        let count = input.len() as u32;
+        let count = match mode {
+            Mode::Kanji => (input.len() / 2) as u32,
+            _ => input.len() as u32,
+        };
         let cc_bits = char_count_bits(mode, version);
         push_bits(&mut bits, count, cc_bits);
 
-        // Mode-specific data encoding
         match mode {
-            Mode::Numeric => crate::encoder::numeric::encode(input, &mut bits),
-            Mode::Alphanumeric => crate::encoder::alphanumeric::encode(input, &mut bits),
-            Mode::Byte => crate::encoder::byte::encode(input, &mut bits),
+            Mode::Numeric => {
+                let s = std::str::from_utf8(input).expect("numeric mode requires ASCII digits");
+                crate::encoder::numeric::encode(s, &mut bits);
+            }
+            Mode::Alphanumeric => {
+                let s = std::str::from_utf8(input)
+                    .expect("alphanumeric mode requires ASCII subset bytes");
+                crate::encoder::alphanumeric::encode(s, &mut bits);
+            }
+            Mode::Byte => crate::encoder::byte::encode_bytes(input, &mut bits),
+            Mode::Kanji => crate::encoder::kanji::encode_bytes(input, &mut bits)?,
         }
-
         Ok(bits)
     }
+}
+
+fn bits_to_encode_bits(bits: &crate::bits::Bits) -> Result<EncodeBits, QRGenError> {
+    let mut out = EncodeBits::new();
+    let len = bits.len();
+    for i in 0..len {
+        out.push(bits.bit_at(i));
+    }
+    Ok(out)
 }
 
 #[cfg(test)]
