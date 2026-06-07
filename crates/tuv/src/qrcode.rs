@@ -216,7 +216,7 @@ impl QRCode {
             .build_png()
     }
 
-    /// Configure rendering (colors, dimensions, string/unicode/image output).
+    /// Configure rendering (colors, dimensions, unicode/image output).
     pub fn render(&self) -> render::Renderer<'_> {
         render::Renderer::new(&self.colors, self.width(), self.version.is_micro())
     }
@@ -281,12 +281,21 @@ impl QRCode {
 
     /// Human-readable matrix for debugging.
     pub fn to_debug_str(&self, on_char: char, off_char: char) -> String {
-        self.render()
-            .quiet_zone(false)
-            .module_dimensions(1, 1)
-            .dark_char(on_char)
-            .light_char(off_char)
-            .build_string()
+        let w = self.width();
+        (0..w)
+            .map(|y| {
+                (0..w)
+                    .map(|x| {
+                        if self.module_is_dark(x, y) {
+                            on_char
+                        } else {
+                            off_char
+                        }
+                    })
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     pub fn to_vec(&self) -> Vec<bool> {

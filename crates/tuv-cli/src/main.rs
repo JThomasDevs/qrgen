@@ -40,6 +40,10 @@ struct Args {
     #[arg(long)]
     unicode: bool,
 
+    /// Terminal columns per QR module for --unicode (default 2; try 3–4 for easier scanning)
+    #[arg(long, default_value = "2", requires = "unicode")]
+    unicode_scale: u32,
+
     /// SVG/PNG dark module color (hex)
     #[arg(long, default_value = "#000000")]
     dark_color: String,
@@ -84,7 +88,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let qr = builder.generate()?;
 
     if args.unicode {
-        let text = qr.render().quiet_zone(args.quiet_zone).build_unicode();
+        let text = qr
+            .render()
+            .quiet_zone(args.quiet_zone)
+            .unicode_scale(args.unicode_scale)
+            .build_unicode();
         print!("{text}");
         return Ok(());
     }

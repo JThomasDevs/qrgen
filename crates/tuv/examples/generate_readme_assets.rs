@@ -9,11 +9,11 @@ use image::{ImageBuffer, Rgba};
 use tuv::bits::Bits;
 use tuv::{ECCLevel, QRCode, Version};
 
-const SIZE: u32 = 256;
-/// Micro QR README assets need larger modules so they stay scannable when GitHub scales them down.
-const MICRO_PNG_MIN: u32 = 640;
-const MICRO_MODULE_MIN: u32 = 20;
-const MICRO_EXTRA_BORDER_PX: u32 = 48;
+const SIZE: u32 = 200;
+/// Micro QR README previews target this total width/height (including extra border).
+const MICRO_DISPLAY_PX: u32 = 220;
+const MICRO_MODULE_MIN: u32 = 6;
+const MICRO_EXTRA_BORDER_PX: u32 = 16;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = readme_assets_dir();
@@ -69,9 +69,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let unicode_qr = QRCode::from("https://example.com").generate()?;
     save_png(&out_dir.join("render-unicode.png"), unicode_qr)?;
-
-    let string_qr = QRCode::from("https://example.com").generate()?;
-    save_png(&out_dir.join("render-build-string.png"), string_qr)?;
 
     let luma_qr = QRCode::from("https://example.com").generate()?;
     save_png(&out_dir.join("render-luma.png"), luma_qr)?;
@@ -183,7 +180,9 @@ fn save_render_transparent_png(path: &Path, qr: &QRCode) -> Result<(), Box<dyn s
 
 fn save_micro_png(path: &Path, qr: QRCode) -> Result<(), Box<dyn std::error::Error>> {
     let modules_per_side = qr.width() as u32 + 4;
-    let module_px = (MICRO_PNG_MIN + modules_per_side - 1) / modules_per_side;
+    let border_total = 2 * MICRO_EXTRA_BORDER_PX;
+    let content_target = MICRO_DISPLAY_PX.saturating_sub(border_total);
+    let module_px = (content_target + modules_per_side - 1) / modules_per_side;
     let module_px = module_px.max(MICRO_MODULE_MIN);
 
     let img = qr

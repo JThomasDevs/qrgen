@@ -49,7 +49,7 @@ let qr = QRCode::from("123")
     .generate()?;
 ```
 
-<img src="assets/readme/builder-micro-v1.png" width="280" alt="Micro QR version 1" />
+![Micro QR version 1](assets/readme/builder-micro-v1.png)
 
 > **Note:** Micro QR requires a **Micro QR-capable** scanner. Standard QR apps (and iPhone Camera) often cannot read Micro QR.
 
@@ -62,7 +62,7 @@ let qr = QRCode::from_bytes(b"123")
     .generate()?;
 ```
 
-<img src="assets/readme/builder-micro-auto.png" width="280" alt="Micro QR auto version" />
+![Micro QR auto version](assets/readme/builder-micro-auto.png)
 
 Backward-compatible render helpers:
 
@@ -72,7 +72,7 @@ let svg = qr.to_svg(true);
 let png = qr.to_png(300, true);
 ```
 
-![`to_png` output](assets/readme/builder-to-png.png)
+![to_png output](assets/readme/builder-to-png.png)
 
 ### Render builder
 
@@ -91,21 +91,14 @@ let svg = qr.render()
 
 ![Custom colors](assets/readme/render-colors.png)
 
-Terminal unicode blocks (text output; encoded symbol shown below):
+Terminal unicode blocks (text output; encoded symbol shown below). Default scale is 2 columns per module (~66 cols for a typical URL); use [`Renderer::unicode_scale`](https://docs.rs/tuv/latest/tuv/render/struct.Renderer.html#method.unicode_scale) for larger terminal output:
 
 ```rust
 let terminal = qr.render().build_unicode();
+let larger = qr.render().unicode_scale(3).build_unicode();
 ```
 
 ![Encoded symbol for unicode output](assets/readme/render-unicode.png)
-
-ASCII matrix string (text output; encoded symbol shown below):
-
-```rust
-let text = qr.render().dark_char('#').light_char('.').build_string();
-```
-
-![Encoded symbol for `build_string` output](assets/readme/render-build-string.png)
 
 Luma image buffer:
 
@@ -113,7 +106,7 @@ Luma image buffer:
 let luma = qr.render().build_image_luma();
 ```
 
-![Encoded symbol for `build_image_luma` output](assets/readme/render-luma.png)
+![Encoded symbol for build_image_luma output](assets/readme/render-luma.png)
 
 Transparent background (PNG alpha 0 / SVG without background rect):
 
@@ -146,23 +139,33 @@ let qr = QRCode::from_bits(bits).with_ecc(ECCLevel::L).generate()?;
 
 ### Matrix introspection
 
+After `generate()`, the resulting `QRCode` exposes the encoded module grid for inspection, tests, or custom renderers (separate from the PNG/SVG/unicode render helpers above).
+
 ```rust
+use tuv::{Color, QRCode, Version, ECCLevel};
+
 let qr = QRCode::from("Hi")
     .with_version(Version::Normal(1))
     .with_ecc(ECCLevel::L)
     .generate()?;
+
+// (x, y) = column, row; (0, 0) is the top-left module.
+// The grid is the symbol only (21×21 here)—quiet zone is added at render time.
+let x = 10;
+let y = 10;
+
+let dark: bool = qr[(x, y)] == Color::Dark;    // Color::Dark or Color::Light at (x, y)
+let max_err = qr.max_allowed_errors(); // max flipped modules Reed–Solomon can fix
+let functional = qr.is_functional(x, y); // true for finder/timing/format modules, not data
+let bits = qr.to_vec();                // flat Vec<bool>, row-major, dark = true
+let colors = qr.to_colors();           // same layout as to_vec(), as Color values
+
+// Debug dump only (tests, assert snapshots)—not for terminal display:
+let dump = qr.to_debug_str('#', '.');
 ```
 
-![Version 1 symbol encoding "Hi"](assets/readme/matrix-hi.png)
+![Version 1 symbol encoding Hi](assets/readme/matrix-hi.png)
 
-```rust
-use tuv::Color;
-
-let dark = qr[(x, y)] == Color::Dark;
-let max_err = qr.max_allowed_errors();
-let functional = qr.is_functional(x, y);
-let debug = qr.to_debug_str('#', '.');
-```
 
 ## Defaults
 
@@ -185,7 +188,7 @@ SVG output:
 cargo run -p tuv-cli -- "Hello" -o hello.svg
 ```
 
-![CLI SVG output ("Hello")](assets/readme/cli-hello.png)
+![CLI SVG output (Hello)](assets/readme/cli-hello.png)
 
 PNG output:
 
@@ -193,7 +196,7 @@ PNG output:
 cargo run -p tuv-cli -- "Hello" --png -o hello.png
 ```
 
-![CLI PNG output ("Hello")](assets/readme/cli-hello-png.png)
+![CLI PNG output (Hello)](assets/readme/cli-hello-png.png)
 
 Micro QR version 1:
 
@@ -201,7 +204,7 @@ Micro QR version 1:
 cargo run -p tuv-cli -- "123" --micro 1 --ecc L -o micro.svg
 ```
 
-<img src="assets/readme/cli-micro.png" width="280" alt="CLI Micro QR v1 (&quot;123&quot;)" />
+![CLI Micro QR v1 (123)](assets/readme/cli-micro.png)
 
 Micro QR auto version:
 
@@ -209,12 +212,13 @@ Micro QR auto version:
 cargo run -p tuv-cli -- "123" --micro --ecc L -o micro-auto.svg
 ```
 
-<img src="assets/readme/cli-micro-auto.png" width="280" alt="CLI Micro QR auto (&quot;123&quot;)" />
+![CLI Micro QR auto (123)](assets/readme/cli-micro-auto.png)
 
-Terminal unicode (text output; encoded symbol shown below):
+Terminal unicode (text output; encoded symbol shown below). Default `--unicode-scale` is 2 (~66 cols for a typical URL); use 3–4 for easier phone scanning on wider terminals:
 
 ```bash
 cargo run -p tuv-cli -- "Hello" --unicode
+cargo run -p tuv-cli -- "https://example.com" --unicode --unicode-scale 3
 ```
 
 ![Encoded symbol for CLI unicode output](assets/readme/cli-unicode.png)
@@ -225,7 +229,7 @@ Custom colors:
 cargo run -p tuv-cli -- "Hello" --dark-color "#800000" --light-color "#ffff80" -o colored.svg
 ```
 
-![CLI colored output ("Hello")](assets/readme/cli-colored.png)
+![CLI colored output (Hello)](assets/readme/cli-colored.png)
 
 ## Testing
 

@@ -1,8 +1,7 @@
-//! Rendering — SVG, PNG, terminal string, and unicode output.
+//! Rendering — SVG, PNG, unicode, and luma image output.
 
 pub mod pixels;
 pub mod png;
-pub mod string;
 pub mod svg;
 pub mod unicode;
 
@@ -20,10 +19,9 @@ pub struct Renderer<'a> {
     modules_count: u32,
     quiet_zone_modules: u32,
     module_size: (u32, u32),
+    unicode_scale: u32,
     dark_svg: String,
     light_svg: String,
-    dark_char: char,
-    light_char: char,
     has_quiet_zone: bool,
     transparent_background: bool,
 }
@@ -36,10 +34,9 @@ impl<'a> Renderer<'a> {
             modules_count: modules_count as u32,
             quiet_zone_modules: if is_micro { 2 } else { 4 },
             module_size: (8, 8),
+            unicode_scale: 2,
             dark_svg: "#000000".to_string(),
             light_svg: "#ffffff".to_string(),
-            dark_char: '\u{2588}',
-            light_char: ' ',
             has_quiet_zone: true,
             transparent_background: false,
         }
@@ -55,16 +52,6 @@ impl<'a> Renderer<'a> {
         self
     }
 
-    pub fn dark_char(&mut self, ch: char) -> &mut Self {
-        self.dark_char = ch;
-        self
-    }
-
-    pub fn light_char(&mut self, ch: char) -> &mut Self {
-        self.light_char = ch;
-        self
-    }
-
     pub fn quiet_zone(&mut self, has_quiet_zone: bool) -> &mut Self {
         self.has_quiet_zone = has_quiet_zone;
         self
@@ -77,6 +64,15 @@ impl<'a> Renderer<'a> {
 
     pub fn module_dimensions(&mut self, width: u32, height: u32) -> &mut Self {
         self.module_size = (max(width, 1), max(height, 1));
+        self
+    }
+
+    /// Terminal columns per QR module for [`Self::build_unicode`] (default `2`).
+    ///
+    /// Each module is rendered `scale` columns wide; height stays one terminal line per
+    /// QR row via Dense1x2 half-block characters (2 pixel rows per module row).
+    pub fn unicode_scale(&mut self, scale: u32) -> &mut Self {
+        self.unicode_scale = max(scale, 1);
         self
     }
 
@@ -118,25 +114,15 @@ impl<'a> Renderer<'a> {
         )
     }
 
-    pub fn build_string(&self) -> String {
-        string::render_chars(
-            self.content,
-            self.modules_count as usize,
-            self.quiet_zone_modules as usize,
-            self.has_quiet_zone,
-            self.dark_char,
-            self.light_char,
-            self.module_size,
-        )
-    }
-
     pub fn build_unicode(&self) -> String {
+        let scale = self.unicode_scale.max(1);
+        // Dense1x2: scale affects width only; 2 pixel rows per QR row → 1 terminal line.
         unicode::render_dense1x2(
             self.content,
             self.modules_count as usize,
             self.quiet_zone_modules as usize,
             self.has_quiet_zone,
-            self.module_size,
+            (scale, 2),
         )
     }
 

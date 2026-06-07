@@ -71,7 +71,7 @@ fn micro_v3_encodes_alphanumeric_payload() {
     assert!(functional > 0, "expected functional modules");
     assert!(data > 0, "expected data modules");
 
-    let text = qr.render().quiet_zone(false).build_string();
+    let text = qr.to_debug_str('#', '.');
     assert!(!text.is_empty());
     assert_eq!(text.lines().count(), qr.width());
 }
