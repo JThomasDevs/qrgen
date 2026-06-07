@@ -15,7 +15,11 @@ fn ref_matrix(data: &[u8], version: Version, ecc: EcLevel) -> (usize, Vec<bool>)
 }
 
 fn ours_matrix(input: &str, ecc: ECCLevel, version: Option<u8>) -> (usize, Vec<bool>) {
-    let qr = QRCode::new(input, Some(ecc), version).unwrap();
+    let mut builder = QRCode::from(input).with_ecc(ecc);
+    if let Some(version) = version {
+        builder = builder.with_version(version);
+    }
+    let qr = builder.generate().unwrap();
     let w = qr.width();
     let mut v = Vec::with_capacity(w * w);
     for y in 0..w {

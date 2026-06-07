@@ -2,7 +2,7 @@ use tuv::{QRCode, ECCLevel};
 
 #[test]
 fn check_col6() {
-    let qr = QRCode::new("A", Some(ECCLevel::M), None).unwrap();
+    let qr = QRCode::from("A").with_ecc(ECCLevel::M).generate().unwrap();
     let size = qr.size();
     
     println!("Matrix size: {}", size);

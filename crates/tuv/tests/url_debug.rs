@@ -2,7 +2,7 @@ use tuv::{ECCLevel, QRCode};
 
 #[test]
 fn debug_matrix() {
-    let qr = QRCode::new("A", Some(ECCLevel::M), None).unwrap();
+    let qr = QRCode::from("A").with_ecc(ECCLevel::M).generate().unwrap();
     let debug = qr.debug_full_matrix();
 
     assert_eq!(qr.size(), 21);

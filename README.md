@@ -16,13 +16,14 @@ tuv = "0.1.0"
 ```rust
 use tuv::QRCode;
 
-let qr = QRCode::new("https://example.com", None, None)?;
+let qr = QRCode::from("https://example.com").generate()?;
 let svg = qr.to_svg(true);
 let png = qr.to_png(300, true);
 ```
 
-- `ecc: None` defaults to ECC level M.
-- `version: None` auto-selects the smallest QR version that fits the input.
+- ECC defaults to level M when `with_ecc` is omitted.
+- Version auto-selects the smallest QR version that fits the input when `with_version` is omitted.
+- Mask auto-selects the lowest-penalty pattern when `with_mask_id` is omitted.
 
 ## CLI
 

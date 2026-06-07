@@ -50,7 +50,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    let qr = QRCode::new(&args.input, Some(ecc), args.qr_version)?;
+    let mut builder = QRCode::from(&args.input).with_ecc(ecc);
+    if let Some(version) = args.qr_version {
+        builder = builder.with_version(version);
+    }
+    let qr = builder.generate()?;
 
     if args.png {
         let img = qr.to_png(args.size, args.quiet_zone);

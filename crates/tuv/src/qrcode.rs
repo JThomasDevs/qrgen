@@ -3,7 +3,7 @@
 //! ```rust,ignore
 //! use tuv::QRCode;
 //!
-//! let qr = QRCode::new("Hello, world!", None, None)?;
+//! let qr = QRCode::from("Hello, world!").generate()?;
 //! let svg = qr.to_svg(true);
 //! let png = qr.to_png(300, true);
 //! ```
@@ -31,8 +31,20 @@ pub enum QRGenError {
     #[error("invalid version {version}: must be 1-40")]
     InvalidVersion { version: u8 },
 
+    #[error("invalid mask id {mask_id}: must be 0-7")]
+    InvalidMaskId { mask_id: u8 },
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+}
+
+/// Fluent builder for [`QRCode`].
+#[derive(Debug)]
+pub struct QRCodeBuilder<'a> {
+    input: &'a str,
+    ecc: Option<ECCLevel>,
+    version: Option<u8>,
+    mask_id: Option<u8>,
 }
 
 #[derive(Debug)]
@@ -91,33 +103,53 @@ fn matrix_before_mask(input: &str, ecc: ECCLevel, version: u8) -> Result<QRMatri
     Ok(matrix)
 }
 
+fn encode(
+    input: &str,
+    ecc: ECCLevel,
+    version: u8,
+    mask_id: Option<u8>,
+) -> Result<QRCode, QRGenError> {
+    let mut matrix = matrix_before_mask(input, ecc, version)?;
+    let mask_id = crate::matrix::masking::apply_mask_selection(&mut matrix, ecc, mask_id);
+
+    if version >= 7 {
+        crate::matrix::version_info::place_version_info(&mut matrix, version);
+    }
+
+    Ok(QRCode {
+        version,
+        matrix,
+        mask_id,
+        ecc,
+    })
+}
+
 impl QRCode {
+    /// Start building a QR code from `input`.
+    pub fn from(input: &str) -> QRCodeBuilder<'_> {
+        QRCodeBuilder {
+            input,
+            ecc: None,
+            version: None,
+            mask_id: None,
+        }
+    }
+
     /// Encode `input` into a QR code.
     ///
     /// `version` selects a specific QR version (1-40). When `None`, the
     /// smallest version that holds the input at the requested ECC level is
     /// chosen automatically.
+    #[deprecated(note = "use QRCode::from(input).with_ecc(ecc).with_version(version).generate()?")]
     pub fn new(input: &str, ecc: Option<ECCLevel>, version: Option<u8>) -> Result<Self, QRGenError> {
-        let ecc = ecc.unwrap_or(ECCLevel::M);
-        let version = match version {
-            Some(v) => {
-                if !(1..=40).contains(&v) {
-                    return Err(QRGenError::InvalidVersion { version: v });
-                }
-                v
-            }
-            None => smallest_version(input, ecc).ok_or(QRGenError::InputTooLong { ecc })?,
-        };
-
-        let mut matrix = matrix_before_mask(input, ecc, version)?;
-        let mask_id = crate::matrix::masking::find_best_mask(&mut matrix, ecc);
-
-        // Version info for v ≥ 7.
-        if version >= 7 {
-            crate::matrix::version_info::place_version_info(&mut matrix, version);
+        let mut builder = QRCode::from(input);
+        if let Some(ecc) = ecc {
+            builder = builder.with_ecc(ecc);
         }
-
-        Ok(Self { version, matrix, mask_id, ecc })
+        if let Some(version) = version {
+            builder = builder.with_version(version);
+        }
+        builder.generate()
     }
 
     pub fn to_svg(&self, quiet_zone: bool) -> String {
@@ -228,6 +260,52 @@ impl QRCode {
             s.push('\n');
         }
         s
+    }
+}
+
+impl<'a> QRCodeBuilder<'a> {
+    /// Set the error correction level (default: M).
+    pub fn with_ecc(self, ecc: ECCLevel) -> Self {
+        Self { ecc: Some(ecc), ..self }
+    }
+
+    /// Set a specific QR version (1-40). When omitted, the smallest fitting version is chosen.
+    pub fn with_version(self, version: u8) -> Self {
+        Self {
+            version: Some(version),
+            ..self
+        }
+    }
+
+    /// Set a specific mask pattern (0-7). When omitted, the lowest-penalty mask is chosen.
+    pub fn with_mask_id(self, mask_id: u8) -> Self {
+        Self {
+            mask_id: Some(mask_id),
+            ..self
+        }
+    }
+
+    /// Encode the QR code with the configured options.
+    pub fn generate(self) -> Result<QRCode, QRGenError> {
+        let ecc = self.ecc.unwrap_or(ECCLevel::M);
+
+        let version = match self.version {
+            Some(v) => {
+                if !(1..=40).contains(&v) {
+                    return Err(QRGenError::InvalidVersion { version: v });
+                }
+                v
+            }
+            None => smallest_version(self.input, ecc).ok_or(QRGenError::InputTooLong { ecc })?,
+        };
+
+        if let Some(mask_id) = self.mask_id {
+            if mask_id > 7 {
+                return Err(QRGenError::InvalidMaskId { mask_id });
+            }
+        }
+
+        encode(self.input, ecc, version, self.mask_id)
     }
 }
 

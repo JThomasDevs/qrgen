@@ -17,7 +17,11 @@ fn render_row(qr: &QRCode, y: usize) -> String {
 
 #[test]
 fn data_bits_trace() {
-    let qr = QRCode::new("1", Some(ECCLevel::M), Some(1)).unwrap();
+    let qr = QRCode::from("1")
+        .with_ecc(ECCLevel::M)
+        .with_version(1)
+        .generate()
+        .unwrap();
 
     assert_eq!(qr.size(), 21);
     assert_eq!(render_row(&qr, 0), "FFFFFFF??#.#.?FFFFFFF");

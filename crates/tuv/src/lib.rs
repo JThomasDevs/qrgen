@@ -8,7 +8,7 @@
 //! ```
 //! use tuv::QRCode;
 //!
-//! let qr = QRCode::new("Hello, world!", None, None).unwrap();
+//! let qr = QRCode::from("Hello, world!").generate().unwrap();
 //! let svg = qr.to_svg(true);
 //! let png = qr.to_png(300, true);
 //! # let _ = (svg, png);
@@ -33,4 +33,4 @@ pub mod qrcode;
 pub use encoder::{Mode, Encoder};
 pub use error_correction::ECCLevel;
 pub use matrix::{QRMatrix, Module};
-pub use qrcode::{QRCode, QRGenError};
+pub use qrcode::{QRCode, QRCodeBuilder, QRGenError};

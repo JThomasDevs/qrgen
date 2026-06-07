@@ -2,7 +2,7 @@ use tuv::{QRCode, ECCLevel};
 
 #[test]
 fn check_finders() {
-    let qr = QRCode::new("A", Some(ECCLevel::M), None).unwrap();
+    let qr = QRCode::from("A").with_ecc(ECCLevel::M).generate().unwrap();
     
     // Check finder patterns at key positions
     // Top-left finder: positions (0,0) through (6,6)

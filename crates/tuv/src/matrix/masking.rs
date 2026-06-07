@@ -52,6 +52,18 @@ pub fn apply_mask(matrix: &mut QRMatrix, mask_id: u8) {
     }
 }
 
+/// Apply an explicit mask or pick the lowest-penalty mask, then draw format info.
+pub fn apply_mask_selection(matrix: &mut QRMatrix, ecc: ECCLevel, mask_id: Option<u8>) -> u8 {
+    match mask_id {
+        None => find_best_mask(matrix, ecc),
+        Some(id) => {
+            apply_mask(matrix, id);
+            crate::matrix::format_info::place_format_info(matrix, ecc, id);
+            id
+        }
+    }
+}
+
 /// Pick the lowest-penalty mask, apply it, then draw format info for that mask.
 pub fn find_best_mask(matrix: &mut QRMatrix, ecc: ECCLevel) -> u8 {
     let mut best_mask = 0u8;

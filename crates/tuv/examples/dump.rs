@@ -1,6 +1,9 @@
 use tuv::{ECCLevel, QRCode};
 
 fn main() {
-    let qr = QRCode::new("https://vondal.dev", Some(ECCLevel::M), None).unwrap();
+    let qr = QRCode::from("https://vondal.dev")
+        .with_ecc(ECCLevel::M)
+        .generate()
+        .unwrap();
     print!("{}", qr.debug_matrix());
 }

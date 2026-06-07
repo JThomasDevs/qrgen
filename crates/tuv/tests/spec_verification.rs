@@ -4,7 +4,11 @@ use tuv::{QRCode, ECCLevel};
 
 #[test]
 fn svg_has_correct_module_count() {
-    let qr = QRCode::new("1", Some(ECCLevel::M), Some(1)).unwrap();
+    let qr = QRCode::from("1")
+        .with_ecc(ECCLevel::M)
+        .with_version(1)
+        .generate()
+        .unwrap();
     let svg = qr.to_svg(false);
     
     // Count our dark modules (each h 1 v 1 h -1 Z = 1 module)
@@ -21,7 +25,11 @@ fn scan_roundtrip() {
     use std::process::Command;
     
     let input = "1";
-    let qr = QRCode::new(input, Some(ECCLevel::M), Some(1)).unwrap();
+    let qr = QRCode::from(input)
+        .with_ecc(ECCLevel::M)
+        .with_version(1)
+        .generate()
+        .unwrap();
     
     // Write PNG to a unique temp file
     let png = qr.to_png(290, false);
@@ -61,7 +69,11 @@ fn scan_roundtrip() {
 
 #[test]
 fn module_counts_look_reasonable() {
-    let qr = QRCode::new("1", Some(ECCLevel::M), Some(1)).unwrap();
+    let qr = QRCode::from("1")
+        .with_ecc(ECCLevel::M)
+        .with_version(1)
+        .generate()
+        .unwrap();
     
     let mut finder = 0usize;
     let mut timing = 0usize;
