@@ -7,57 +7,127 @@ TUV, for QRs
 ## Install
 
 ```toml
-[dependencies]
-tuv = "0.1.0"
+cargo add tuv
 ```
 
 ## Usage
 
 ### High-level builder (primary API)
 
+UTF-8 string (byte mode — not Kanji mode):
+
 ```rust
 use tuv::{QRCode, Version, ECCLevel};
 
-// UTF-8 string (byte mode — not Kanji mode)
 let qr = QRCode::from("https://example.com").generate()?;
+```
 
-// Raw bytes (byte mode, non-UTF-8 OK)
-let qr = QRCode::from_bytes(b"\xca\xfe").with_ecc(ECCLevel::L).generate()?;
+![UTF-8 string example](assets/readme/builder-from-url.png)
 
-// Shift JIS Kanji mode (raw double-byte bytes, not UTF-8)
+Raw bytes (byte mode; any byte slice, including non-UTF-8):
+
+```rust
+let qr = QRCode::from_bytes(b"Hello").with_ecc(ECCLevel::L).generate()?;
+```
+
+![Raw bytes example](assets/readme/builder-from-bytes-raw.png)
+
+Shift JIS Kanji mode (raw double-byte bytes, not UTF-8):
+
+```rust
 let qr = QRCode::from_bytes(b"\x82\xa0").with_ecc(ECCLevel::M).generate()?;
+```
 
-// Normal or Micro QR version
+![Kanji mode example](assets/readme/builder-from-bytes-kanji.png)
+
+Normal or Micro QR version:
+
+```rust
 let qr = QRCode::from("123")
     .with_ecc(ECCLevel::L)
     .with_version(Version::Micro(1))
     .generate()?;
+```
 
-// Micro QR with auto-selected smallest version
+<img src="assets/readme/builder-micro-v1.png" width="280" alt="Micro QR version 1" />
+
+> **Note:** Micro QR requires a **Micro QR-capable** scanner. Standard QR apps (and iPhone Camera) often cannot read Micro QR.
+
+Micro QR with auto-selected smallest version:
+
+```rust
 let qr = QRCode::from_bytes(b"123")
     .with_micro()
     .with_ecc(ECCLevel::L)
     .generate()?;
+```
 
-// Backward-compatible render helpers
+<img src="assets/readme/builder-micro-auto.png" width="280" alt="Micro QR auto version" />
+
+Backward-compatible render helpers:
+
+```rust
+let qr = QRCode::from("https://example.com").generate()?;
 let svg = qr.to_svg(true);
 let png = qr.to_png(300, true);
 ```
 
+![`to_png` output](assets/readme/builder-to-png.png)
+
 ### Render builder
 
+Custom colors (SVG or PNG):
+
 ```rust
+let qr = QRCode::from("https://example.com").generate()?;
+
 let svg = qr.render()
     .dark_color("#800000")
     .light_color("#ffff80")
     .min_dimensions(200, 200)
     .quiet_zone(true)
     .build_svg();
+```
 
+![Custom colors](assets/readme/render-colors.png)
+
+Terminal unicode blocks (text output; encoded symbol shown below):
+
+```rust
 let terminal = qr.render().build_unicode();
+```
+
+![Encoded symbol for unicode output](assets/readme/render-unicode.png)
+
+ASCII matrix string (text output; encoded symbol shown below):
+
+```rust
 let text = qr.render().dark_char('#').light_char('.').build_string();
+```
+
+![Encoded symbol for `build_string` output](assets/readme/render-build-string.png)
+
+Luma image buffer:
+
+```rust
 let luma = qr.render().build_image_luma();
 ```
+
+![Encoded symbol for `build_image_luma` output](assets/readme/render-luma.png)
+
+Transparent background (PNG alpha 0 / SVG without background rect):
+
+```rust
+let png = qr.render()
+    .transparent_background(true)
+    .min_dimensions(200, 200)
+    .build_png();
+let svg = qr.render()
+    .transparent_background(true)
+    .build_svg();
+```
+
+![Transparent background PNG](assets/readme/render-transparent.png)
 
 ### Low-level Bits API
 
@@ -72,7 +142,18 @@ bits.push_terminator(ECCLevel::L)?;
 let qr = QRCode::from_bits(bits).with_ecc(ECCLevel::L).generate()?;
 ```
 
+![Low-level Bits API with ECI](assets/readme/bits-eci.png)
+
 ### Matrix introspection
+
+```rust
+let qr = QRCode::from("Hi")
+    .with_version(Version::Normal(1))
+    .with_ecc(ECCLevel::L)
+    .generate()?;
+```
+
+![Version 1 symbol encoding "Hi"](assets/readme/matrix-hi.png)
 
 ```rust
 use tuv::Color;
@@ -92,23 +173,63 @@ let debug = qr.to_debug_str('#', '.');
 - [`QRCode::from`](https://docs.rs/tuv/latest/tuv/struct.QRCode.html#method.from) / UTF-8 strings use **byte mode**. True **Kanji mode** requires Shift JIS bytes via [`from_bytes`](https://docs.rs/tuv/latest/tuv/struct.QRCode.html#method.from_bytes) or [`Bits::push_kanji_data`](https://docs.rs/tuv/latest/tuv/bits/struct.Bits.html#method.push_kanji_data).
 - Mask auto-selects the lowest-penalty pattern when `with_mask_id` is omitted.
 - Micro QR uses a 2-module quiet zone; Normal QR uses 4.
+- [`Renderer::transparent_background`](https://docs.rs/tuv/latest/tuv/render/struct.Renderer.html#method.transparent_background) (default `false`) makes PNG light modules and quiet zone fully transparent and omits the SVG background `<rect>`. [`to_png`](https://docs.rs/tuv/latest/tuv/struct.QRCode.html#method.to_png) / [`to_svg`](https://docs.rs/tuv/latest/tuv/struct.QRCode.html#method.to_svg) remain opaque unless you use the render builder.
 
 ## CLI
 
 An optional command-line tool lives in `crates/tuv-cli`:
 
+SVG output:
+
 ```bash
 cargo run -p tuv-cli -- "Hello" -o hello.svg
+```
+
+![CLI SVG output ("Hello")](assets/readme/cli-hello.png)
+
+PNG output:
+
+```bash
 cargo run -p tuv-cli -- "Hello" --png -o hello.png
+```
+
+![CLI PNG output ("Hello")](assets/readme/cli-hello-png.png)
+
+Micro QR version 1:
+
+```bash
 cargo run -p tuv-cli -- "123" --micro 1 --ecc L -o micro.svg
+```
+
+<img src="assets/readme/cli-micro.png" width="280" alt="CLI Micro QR v1 (&quot;123&quot;)" />
+
+Micro QR auto version:
+
+```bash
 cargo run -p tuv-cli -- "123" --micro --ecc L -o micro-auto.svg
+```
+
+<img src="assets/readme/cli-micro-auto.png" width="280" alt="CLI Micro QR auto (&quot;123&quot;)" />
+
+Terminal unicode (text output; encoded symbol shown below):
+
+```bash
 cargo run -p tuv-cli -- "Hello" --unicode
+```
+
+![Encoded symbol for CLI unicode output](assets/readme/cli-unicode.png)
+
+Custom colors:
+
+```bash
 cargo run -p tuv-cli -- "Hello" --dark-color "#800000" --light-color "#ffff80" -o colored.svg
 ```
 
-## Parity
+![CLI colored output ("Hello")](assets/readme/cli-colored.png)
 
-Encoding and matrices are tested against [qrcode 0.14.1](https://docs.rs/qrcode/0.14.1/qrcode/) (dev-dependency). PIC output is intentionally excluded.
+## Testing
+
+Encoding and matrix behavior are verified by the crate's own test suite against the QR specification (no external encoder dependency).
 
 ## License
 
@@ -116,8 +237,4 @@ MIT
 
 ## Other
 
-<!-- markdownlint-disable MD033 -->
-<p align="center">
-  <img src="assets/vondal-dev.svg" alt="Personal website" width="120" />
-</p>
-<!-- markdownlint-enable MD033 -->
+![Personal website](assets/vondal-dev.png)
