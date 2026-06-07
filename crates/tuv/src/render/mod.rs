@@ -25,6 +25,7 @@ pub struct Renderer<'a> {
     dark_char: char,
     light_char: char,
     has_quiet_zone: bool,
+    transparent_background: bool,
 }
 
 impl<'a> Renderer<'a> {
@@ -40,6 +41,7 @@ impl<'a> Renderer<'a> {
             dark_char: '\u{2588}',
             light_char: ' ',
             has_quiet_zone: true,
+            transparent_background: false,
         }
     }
 
@@ -68,14 +70,23 @@ impl<'a> Renderer<'a> {
         self
     }
 
+    pub fn transparent_background(&mut self, transparent: bool) -> &mut Self {
+        self.transparent_background = transparent;
+        self
+    }
+
     pub fn module_dimensions(&mut self, width: u32, height: u32) -> &mut Self {
         self.module_size = (max(width, 1), max(height, 1));
         self
     }
 
     pub fn min_dimensions(&mut self, width: u32, height: u32) -> &mut Self {
-        let qz = if self.has_quiet_zone { 2 } else { 0 } * self.quiet_zone_modules;
-        let width_in_modules = self.modules_count + qz;
+        let border_modules = if self.has_quiet_zone {
+            2 * self.quiet_zone_modules
+        } else {
+            0
+        };
+        let width_in_modules = self.modules_count + border_modules;
         let unit_width = (width + width_in_modules - 1) / width_in_modules;
         let unit_height = (height + width_in_modules - 1) / width_in_modules;
         self.module_dimensions(unit_width, unit_height)
@@ -90,6 +101,7 @@ impl<'a> Renderer<'a> {
             &self.dark_svg,
             &self.light_svg,
             self.module_size,
+            self.transparent_background,
         )
     }
 
@@ -99,7 +111,10 @@ impl<'a> Renderer<'a> {
             self.modules_count as usize,
             self.quiet_zone_modules as usize,
             self.has_quiet_zone,
+            &self.dark_svg,
+            &self.light_svg,
             self.module_size,
+            self.transparent_background,
         )
     }
 

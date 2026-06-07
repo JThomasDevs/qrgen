@@ -19,7 +19,7 @@ pub fn render_png(
             });
         }
     }
-    let mut renderer = super::Renderer::new(&colors, w, false);
+    let mut renderer = super::Renderer::new(&colors, w, matrix.is_micro());
     renderer.quiet_zone(quiet_zone).min_dimensions(size_px, size_px);
     renderer.build_png()
 }
@@ -29,8 +29,13 @@ pub fn render_colors(
     modules_count: usize,
     quiet_zone_modules: usize,
     has_quiet_zone: bool,
+    dark: &str,
+    light: &str,
     module_size: (u32, u32),
+    transparent_background: bool,
 ) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    let dark = parse_hex_color(dark);
+    let light = parse_hex_color(light);
     let qz = if has_quiet_zone {
         quiet_zone_modules
     } else {
@@ -41,8 +46,11 @@ pub fn render_colors(
     let width_px = total_modules as u32 * mw;
     let height_px = total_modules as u32 * mh;
 
-    let mut img: ImageBuffer<Rgba<u8>, Vec<u8>> =
-        ImageBuffer::from_pixel(width_px, height_px, Rgba([255, 255, 255, 255]));
+    let mut img: ImageBuffer<Rgba<u8>, Vec<u8>> = if transparent_background {
+        ImageBuffer::from_pixel(width_px, height_px, Rgba([0, 0, 0, 0]))
+    } else {
+        ImageBuffer::from_pixel(width_px, height_px, light)
+    };
 
     let mut i = 0usize;
     for y in 0..total_modules {
@@ -51,11 +59,13 @@ pub fn render_colors(
                 if content[i] == Color::Dark {
                     for dy in 0..mh {
                         for dx in 0..mw {
-                            img.put_pixel(
-                                x as u32 * mw + dx,
-                                y as u32 * mh + dy,
-                                Rgba([0, 0, 0, 255]),
-                            );
+                            img.put_pixel(x as u32 * mw + dx, y as u32 * mh + dy, dark);
+                        }
+                    }
+                } else if !transparent_background {
+                    for dy in 0..mh {
+                        for dx in 0..mw {
+                            img.put_pixel(x as u32 * mw + dx, y as u32 * mh + dy, light);
                         }
                     }
                 }
@@ -65,4 +75,13 @@ pub fn render_colors(
     }
 
     img
+}
+
+fn parse_hex_color(hex: &str) -> Rgba<u8> {
+    let hex = hex.trim_start_matches('#');
+    if hex.len() != 6 {
+        return Rgba([0, 0, 0, 255]);
+    }
+    let parse = |start: usize| u8::from_str_radix(&hex[start..start + 2], 16).unwrap_or(0);
+    Rgba([parse(0), parse(2), parse(4), 255])
 }

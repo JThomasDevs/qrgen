@@ -14,7 +14,17 @@ pub fn render_svg(matrix: &crate::matrix::QRMatrix, quiet_zone: bool) -> String 
             });
         }
     }
-    render_colors(&colors, w, 4, quiet_zone, "#000000", "#ffffff", (1, 1))
+    let quiet_zone_modules = if matrix.is_micro() { 2 } else { 4 };
+    render_colors(
+        &colors,
+        w,
+        quiet_zone_modules,
+        quiet_zone,
+        "#000000",
+        "#ffffff",
+        (1, 1),
+        false,
+    )
 }
 
 pub fn render_colors(
@@ -25,6 +35,7 @@ pub fn render_colors(
     dark: &str,
     light: &str,
     module_size: (u32, u32),
+    transparent_background: bool,
 ) -> String {
     let qz = if has_quiet_zone {
         quiet_zone_modules
@@ -53,15 +64,27 @@ pub fn render_colors(
         }
     }
 
-    format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width_px}" height="{height_px}" viewBox="0 0 {width_px} {height_px}">
+    if transparent_background {
+        format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width_px}" height="{height_px}" viewBox="0 0 {width_px} {height_px}">
+  <path d="{path}" fill="{dark}"/>
+</svg>"#,
+            width_px = width_px,
+            height_px = height_px,
+            dark = dark,
+            path = path_data
+        )
+    } else {
+        format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width_px}" height="{height_px}" viewBox="0 0 {width_px} {height_px}">
   <rect width="100%" height="100%" fill="{light}"/>
   <path d="{path}" fill="{dark}"/>
 </svg>"#,
-        width_px = width_px,
-        height_px = height_px,
-        light = light,
-        dark = dark,
-        path = path_data
-    )
+            width_px = width_px,
+            height_px = height_px,
+            light = light,
+            dark = dark,
+            path = path_data
+        )
+    }
 }

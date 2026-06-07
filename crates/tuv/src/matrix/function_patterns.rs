@@ -84,6 +84,11 @@ impl QRMatrix {
         Self { version, size, modules }
     }
 
+    /// Whether this matrix uses Micro QR sizing (11×11 … 17×17).
+    pub fn is_micro(&self) -> bool {
+        self.size <= 17 && self.size == self.version as usize * 2 + 9
+    }
+
     /// Set a module at (col, row).
     pub fn set(&mut self, i: usize, j: usize, module: Module) {
         if i >= self.size || j >= self.size {
@@ -345,5 +350,19 @@ mod tests {
         let s = 25;
         let cells = crate::matrix::format_info::all_format_info_positions(s);
         assert_eq!(cells.len(), 30);
+    }
+
+    #[test]
+    fn is_micro_detects_micro_vs_normal_sizing() {
+        let normal = QRMatrix::new(1);
+        assert!(!normal.is_micro());
+        assert_eq!(normal.size, 21);
+
+        let micro = QRMatrix {
+            version: 1,
+            size: 11,
+            modules: vec![vec![Module::Data(false); 11]; 11],
+        };
+        assert!(micro.is_micro());
     }
 }
