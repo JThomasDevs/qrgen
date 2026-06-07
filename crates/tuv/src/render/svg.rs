@@ -1,40 +1,67 @@
-//! SVG rendering.
-//!
-//! SVG output is vector-based: infinitely scalable, small file size,
-//! and easy to embed in documents or print.
+//! SVG rendering from color buffers.
 
-use super::super::{QRMatrix, Module};
+use crate::types::Color;
 
-#[inline]
-fn is_dark(module: &Module) -> bool {
-    module.is_dark()
+pub fn render_svg(matrix: &crate::matrix::QRMatrix, quiet_zone: bool) -> String {
+    let w = matrix.size();
+    let mut colors = Vec::with_capacity(w * w);
+    for y in 0..w {
+        for x in 0..w {
+            colors.push(if matrix.get(x, y).is_dark() {
+                Color::Dark
+            } else {
+                Color::Light
+            });
+        }
+    }
+    render_colors(&colors, w, 4, quiet_zone, "#000000", "#ffffff", (1, 1))
 }
 
-/// Render a QR matrix as an SVG string.
-///
-/// If `quiet_zone` is true, adds a 4-module white margin around the QR.
-pub fn render_svg(matrix: &QRMatrix, quiet_zone: bool) -> String {
-    let margin = if quiet_zone { 4 } else { 0 };
-    let total_size = matrix.size() + margin * 2;
+pub fn render_colors(
+    content: &[Color],
+    modules_count: usize,
+    quiet_zone_modules: usize,
+    has_quiet_zone: bool,
+    dark: &str,
+    light: &str,
+    module_size: (u32, u32),
+) -> String {
+    let qz = if has_quiet_zone {
+        quiet_zone_modules
+    } else {
+        0
+    };
+    let (mw, mh) = module_size;
+    let total_modules = modules_count + 2 * qz;
+    let width_px = total_modules as u32 * mw;
+    let height_px = total_modules as u32 * mh;
 
     let mut path_data = String::new();
-
-    for j in 0..matrix.size() {
-        for i in 0..matrix.size() {
-            if is_dark(&matrix.get(i, j)) {
-                let x = (i + margin) as f64;
-                let y = (j + margin) as f64;
-                path_data.push_str(&format!("M {:.0} {:.0} h 1 v 1 h -1 Z ", x, y));
+    let mut i = 0usize;
+    for y in 0..total_modules {
+        for x in 0..total_modules {
+            if qz <= x && x < modules_count + qz && qz <= y && y < modules_count + qz {
+                if content[i] == Color::Dark {
+                    let px = x as f64 * mw as f64;
+                    let py = y as f64 * mh as f64;
+                    path_data.push_str(&format!(
+                        "M {px} {py} h {mw} v {mh} h -{mw} Z "
+                    ));
+                }
+                i += 1;
             }
         }
     }
 
     format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}">
-  <rect width="100%" height="100%" fill="white"/>
-  <path d="{path}" fill="black"/>
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width_px}" height="{height_px}" viewBox="0 0 {width_px} {height_px}">
+  <rect width="100%" height="100%" fill="{light}"/>
+  <path d="{path}" fill="{dark}"/>
 </svg>"#,
-        size = total_size,
+        width_px = width_px,
+        height_px = height_px,
+        light = light,
+        dark = dark,
         path = path_data
     )
 }
